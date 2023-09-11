@@ -2,12 +2,19 @@ using FlightBookingAPI.Data;
 using FlightBookingAPI.Data.Redis;
 using FlightBookingAPI.Services.Airports;
 using FlightBookingAPI.Services.Flights;
+using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString") ?? Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(c =>
+    ConnectionMultiplexer.Connect(redisConnectionString));
+
 builder.Services.AddScoped<IRedisClient, RedisClient>();
+
 
 builder.Services.AddScoped<IAirportService, AirportService>();
 builder.Services.AddScoped<IFlightService, FlightService>();

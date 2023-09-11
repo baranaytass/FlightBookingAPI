@@ -8,18 +8,11 @@ namespace FlightBookingAPI.Data.Redis
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly IDatabase _database;
-        private readonly IConfiguration _config;
 
-        public RedisClient(IConfiguration configuration)
+        public RedisClient(IConnectionMultiplexer redis)
         {
-            _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            var redisConfig = ConfigurationOptions.Parse(_config.GetValue<string>("Redis:ConnectionString"));
+            _redis = redis;
 
-            redisConfig.AbortOnConnectFail = false;
-            redisConfig.ConnectTimeout = 30000;
-            redisConfig.SyncTimeout = 30000;
-
-            _redis = ConnectionMultiplexer.Connect(redisConfig);
             _database = _redis.GetDatabase();
         }
 
