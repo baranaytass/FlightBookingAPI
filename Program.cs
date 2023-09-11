@@ -8,7 +8,7 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString") ?? Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(c =>
     ConnectionMultiplexer.Connect(redisConnectionString));
