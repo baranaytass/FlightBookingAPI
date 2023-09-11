@@ -9,23 +9,33 @@ namespace FlightBookingAPI.Data
     {
         private readonly IRedisClient _redisClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<BogusMockDataGenerator> _logger;
 
-        public BogusMockDataGenerator(IRedisClient redisClient, IConfiguration configuration)
+        public BogusMockDataGenerator(IRedisClient redisClient, IConfiguration configuration, ILogger<BogusMockDataGenerator> logger)
         {
             _redisClient = redisClient ?? throw new ArgumentNullException(nameof(redisClient));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger;
         }
 
         public void SeedData()
         {
-            int airportCount = _configuration.GetValue<int>("Settings:AirportCount");
-            int flightCountPerAirport = _configuration.GetValue<int>("Settings:FlightCountPerAirport");
+            try
+            {
+                int airportCount = _configuration.GetValue<int>("Settings:AirportCount");
+                int flightCountPerAirport = _configuration.GetValue<int>("Settings:FlightCountPerAirport");
 
-            var airports = GenerateAirports(airportCount);
-            var flights = GenerateFlights(flightCountPerAirport*airportCount, airports);
+                var airports = GenerateAirports(airportCount);
+                var flights = GenerateFlights(flightCountPerAirport * airportCount, airports);
 
-            _redisClient.SetAsync<List<Airport>>("Airports", airports, TimeSpan.MaxValue);
-            _redisClient.SetAsync<List<Flight>>("Flights", flights, TimeSpan.MaxValue);
+                _redisClient.SetAsync<List<Airport>>("Airports", airports, TimeSpan.MaxValue);
+                _redisClient.SetAsync<List<Flight>>("Flights", flights, TimeSpan.MaxValue);
+            }
+            catch (Exception e)
+            {
+                _logger.Log(LogLevel.Error, e.Message);
+                throw;
+            }
         }
 
         private List<Airport> GenerateAirports(int count)
@@ -52,10 +62,15 @@ namespace FlightBookingAPI.Data
                     {
                         toAirportCode = f.PickRandom(airports).Code;
                     } while (toAirportCode == flight.FromAirportCode);
+
                     return toAirportCode;
                 })
-                .RuleFor(f => f.DepartureDate, f => f.Date.Soon(_configuration.GetValue<int>("Settings:DateScope"), DateTime.Today))
-                .RuleFor(f => f.FlightType, f => FlightType.OneWay);
+                .RuleFor(f => f.DepartureDate,
+                    f => f.Date.Soon(_configuration.GetValue<int>("Settings:DateScope"), DateTime.Today))
+                .RuleFor(f => f.FlightType, f => FlightType.OneWay)
+                .RuleFor(f => f.EstimatedTravelTime, f => f.Date.Timespan(TimeSpan.FromHours(11).Add(TimeSpan.FromHours(1))))
+                .RuleFor(f => f.ArrivalTime, (f, flight) => flight.DepartureDate.Add(flight.EstimatedTravelTime))
+                .RuleFor(f => f.Price, f => Math.Round(f.Random.Double(50, 500), 1));
 
             return flightFaker.Generate(count);
         }

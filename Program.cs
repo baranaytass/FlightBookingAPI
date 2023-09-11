@@ -7,9 +7,6 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IConnectionMultiplexer>(c =>
-    ConnectionMultiplexer.Connect(builder.Configuration.GetValue<string>("Redis:ConnectionString")));
-
 builder.Services.AddScoped<IRedisClient, RedisClient>();
 
 builder.Services.AddScoped<IAirportService, AirportService>();

@@ -15,7 +15,7 @@ public class RequestValidator : AbstractValidator<FlightSearchRequest>
 
     private bool BeAValidDate(DateTime date)
     {
-        return date > DateTime.Now;
+        return date.Date >= DateTime.Now.Date;
     }
 
     private bool BeValidReturnDate(DateTime departureDate, DateTime? returnDate)

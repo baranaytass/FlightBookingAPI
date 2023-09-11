@@ -24,15 +24,15 @@ namespace FlightBookingAPI.Controllers
             {
                 var airports = _airportService.GetAllAirports().Result;
 
-                return Ok(new BaseResponse()
+                return Ok(new AirportResponse()
                 {
                     Success = true,
-                    Data = airports
+                    Airports = airports
                 });
             }
             catch (Exception e)
             {
-                return BadRequest(new BaseResponse()
+                return BadRequest(new AirportResponse()
                 {
                     Success = false,
                     Errors = new List<string> { e.Message }

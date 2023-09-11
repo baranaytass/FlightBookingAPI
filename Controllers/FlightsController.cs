@@ -31,7 +31,7 @@ namespace FlightBookingAPI.Controllers
                 if (!validationResult.IsValid)
                 {
                     var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-                    return BadRequest(new BaseResponse
+                    return BadRequest(new FlightResponse
                     {
                         Success = false,
                         Errors = errors
@@ -40,30 +40,28 @@ namespace FlightBookingAPI.Controllers
 
                 if (flightSearchRequest.FlightType == FlightType.OneWay)
                 {
-                    return Ok(new BaseResponse()
+                    var foundFlights = _flightService.GetFilteredFlights(flightSearchRequest.FromAirportCode,
+                        flightSearchRequest.ToAirportCode, flightSearchRequest.DepartureDate).Result;
+
+                    return Ok(new FlightResponse()
                     {
                         Success = true,
-                        Data = _flightService.GetFilteredFlights(flightSearchRequest.FromAirportCode,
-                            flightSearchRequest.ToAirportCode, flightSearchRequest.DepartureDate).Result
+                        DepartureFlights = foundFlights
                     });
                 }
 
-                return Ok(new BaseResponse()
+                return Ok(new FlightResponse()
                 {
                     Success = true,
-                    Data =
-                        new
-                        {
-                            DepartureFlights = _flightService.GetFilteredFlights(flightSearchRequest.FromAirportCode, flightSearchRequest.ToAirportCode, flightSearchRequest.DepartureDate).Result,
-                            ReturnFlights = _flightService.GetFilteredFlights(flightSearchRequest.ToAirportCode, flightSearchRequest.FromAirportCode, (DateTime)flightSearchRequest.ReturnDate).Result,
-                        }
+                    DepartureFlights = _flightService.GetFilteredFlights(flightSearchRequest.FromAirportCode, flightSearchRequest.ToAirportCode, flightSearchRequest.DepartureDate).Result,
+                    ReturnFlights = _flightService.GetFilteredFlights(flightSearchRequest.ToAirportCode, flightSearchRequest.FromAirportCode, (DateTime)flightSearchRequest.ReturnDate).Result,
                 });
             }
             catch (Exception e)
             {
                 _logger.Log(LogLevel.Error, e.Message, e.InnerException?.Message);
 
-                return BadRequest(new BaseResponse()
+                return BadRequest(new FlightResponse()
                 {
                     Success = false,
                     Errors = new List<string> { e.Message }

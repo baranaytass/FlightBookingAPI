@@ -23,7 +23,7 @@ namespace FlightBookingAPI.Services.Flights
 
                 var filteredFlights = flights.Where(f =>
                     f.FromAirportCode == fromAirportCode && f.ToAirportCode == toAirportCode &&
-                    f.DepartureDate.Date == flightDate.Date).ToList();
+                    f.DepartureDate.Date == flightDate.Date).OrderBy(x=>x.DepartureDate).ToList();
 
 
                 return filteredFlights;
